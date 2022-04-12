@@ -1,0 +1,51 @@
+import Spotify_util # other script
+
+#useful library
+import pandas as pd
+from pprint import pprint
+
+## LOAD ENVIRONMENT VARIABLES : 
+from dotenv import load_dotenv
+
+
+
+def main (songs,playlists):
+    load_dotenv()
+    """spotify = spotipy.Spotify(auth_manager=spotipy.SpotifyOAuth())
+    me = spotify.me()
+    pprint(me)"""
+    # songs part 
+    if songs == 'y':
+        saved_tracks = Spotify_util.get_tracks_df()
+        Spotify_util.wanna_saved('Favorite_Songs',saved_tracks)
+    #playlists part
+    if playlists == 'y':
+        playlist_name, playlist_id, userconnection = Spotify_util.get_playlists_names()
+        
+        print('\n')
+        print(playlist_name)
+        print('\n')
+        keep_playlists = input('Keep all playlists ? (y/n) :')
+
+        if keep_playlists == 'y':
+            print('keep every playlists')
+        else : 
+            for playlist,id in zip(playlist_name,playlist_id):
+                tokeep = input(f'Keep {playlist} ? (y/n) :')
+                if tokeep !='y':
+                    playlist_name.remove(playlist)
+                    playlist_id.remove(id)
+        #launch function
+
+        df_playlists = Spotify_util.get_playlists_tracks(playlist_name,playlist_id,userconnection)
+        Spotify_util.wanna_saved('Playlists',df_playlists)
+    #Albums
+    
+
+    # Artistes
+if __name__ == "__main__":
+    songs = input('Wanna get all favorites songs ? (y/n) :')
+    playlists = input('Wanna get favorites playlists ? (y/n) :')
+    main(songs,playlists)
+else: #useless
+    print("main is being imported") 
