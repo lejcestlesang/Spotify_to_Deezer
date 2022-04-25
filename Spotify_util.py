@@ -10,6 +10,7 @@ def get_tracks_df(print_loading=False):
     spotipy_user = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
 
     results = spotipy_user.current_user_saved_tracks()
+    totalTracks = results['total']
     tracklist = []
     artistlist = []
     albumlist = []
@@ -20,8 +21,8 @@ def get_tracks_df(print_loading=False):
                     'albumlist' : albumlist,
                     'trackid' : trackid
                     }
-    while results['next']:
-        results = spotipy_user.next(results)
+    
+    while len(tracklist)<totalTracks:
         for item in results['items']:
             track = item['track']
             if print_loading:
@@ -30,8 +31,43 @@ def get_tracks_df(print_loading=False):
             artistlist.append(track['artists'][0]['name'])
             albumlist.append(track['album']['name'])
             trackid.append(track['id'])
-    
+        results = spotipy_user.next(results) 
     return pd.DataFrame(tracks_info)
+
+def get_albums_df(print_loading=False):
+    """add description --- 
+    """
+    scope = 'user-library-read'
+    sp = spotipy.Spotify(auth_manager=SpotifyOAuth(scope=scope))
+
+    results = sp.current_user_saved_albums()
+
+    totalAlbums = results['total']
+    artists = []
+    albums = []
+
+    while len(albums)<totalAlbums:
+        for item in results['items']:
+            albumname = item['album']['name']
+            if len(item['album']['artists']) == 1 : 
+                artistname = item['album']['artists'][0]['name']
+            else :
+                print(f' new PUTE for {albumname}')
+                artistname = ""
+                for i,val in enumerate(item['album']['artists']):
+                    artistname = artistname+ val['name'] + '/'
+            if print_loading:
+                print(f'Album name : {albumname} by {artistname}')
+            artists.append(artistname)
+            albums.append(albumname)
+        results = sp.next(results)
+
+    return pd.DataFrame({
+        'Artists': artists, 
+        'Albums': albums,
+        })
+
+
 
 def get_playlists_names(print_loading=False):
     """Get the name of all the playlists of the user ---

@@ -9,12 +9,8 @@ from dotenv import load_dotenv
 
 
 
-def main (songs,playlists):
+def main (songs,playlists,albums):
     load_dotenv()
-    """spotify = spotipy.Spotify(auth_manager=spotipy.SpotifyOAuth())
-    me = spotify.me()
-    pprint(me)"""
-    # songs part 
     if songs == 'y':
         saved_tracks = Spotify_util.get_tracks_df()
         Spotify_util.wanna_saved('Favorite_Songs',saved_tracks)
@@ -40,12 +36,16 @@ def main (songs,playlists):
         df_playlists = Spotify_util.get_playlists_tracks(playlist_name,playlist_id,userconnection)
         Spotify_util.wanna_saved('Playlists',df_playlists)
     #Albums
+    if albums == 'y':
+        saved_tracks = Spotify_util.get_tracks_df()
+        Spotify_util.wanna_saved('Favorite_Albums',saved_tracks)
     
 
     # Artistes
 if __name__ == "__main__":
     songs = input('Wanna get all favorites songs ? (y/n) :')
     playlists = input('Wanna get favorites playlists ? (y/n) :')
-    main(songs,playlists)
+    albums = input('Wanna get favorites albums ? (y/n) :')
+    main(songs,playlists,albums)
 else: #useless
     print("main is being imported") 
