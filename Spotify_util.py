@@ -16,9 +16,9 @@ def get_tracks_df(print_loading=False):
     albumlist = []
     trackid = []
 
-    tracks_info = { 'tracklist' : tracklist,
-                    'artistlist' : artistlist,
-                    'albumlist' : albumlist,
+    tracks_info = { 'Tracks' : tracklist,
+                    'Artists' : artistlist,
+                    'Albums' : albumlist,
                     'trackid' : trackid
                     }
     
@@ -129,9 +129,9 @@ def get_playlists_tracks(playlist_name,playlists_id,userconnection,print_loading
         df = pd.DataFrame(columns=['PlaylistName','TrackID'])
         trackIDS,tracklist,artistlist,albumlist = trackID_from_playlistID(userconnection,val)
         df['TrackID'] = trackIDS
-        df['tracklist'] = tracklist
-        df['artistlist'] = artistlist
-        df['albumlist'] = albumlist
+        df['Tracks'] = tracklist
+        df['Artists'] = artistlist
+        df['Albums'] = albumlist
         df['PlaylistName'] = playlist_name[i]
 
         df_playlist = pd.concat([df_playlist,df],ignore_index=True)
@@ -159,6 +159,27 @@ def wanna_saved(tipo,df):
     if saved == 'y':
         df.to_excel(f'{tipo}.xlsx')
         print(f'{tipo} from saved to an excel file')
+
+def get_choose_playlists(print_loading=False):
+    playlist_name, playlist_id, userconnection = get_playlists_names() 
+    print('\n')
+    print(playlist_name)
+    print('\n')
+    keep_playlists = input('Keep all playlists ? (y/n) :')
+
+    if keep_playlists == 'y':
+        print('keep every playlists')
+    else : 
+        for playlist,id in zip(list(playlist_name),list(playlist_id)):
+            tokeep = input(f'Keep {playlist} ? (y/n) :')
+            if tokeep !='y':
+                playlist_name.remove(playlist)
+                playlist_id.remove(id)
+    print('\n')
+    if print_loading:
+        print(f'playlists to get tracks : {playlist_name}')
+        print('\n')
+    return get_playlists_tracks(playlist_name,playlist_id,userconnection)
 
     
 if __name__ == "__main__": 

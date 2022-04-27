@@ -10,6 +10,7 @@ import os
 
 
 def main (songs,playlists,albums):
+    # load connection parameters
     load_dotenv()
     param_session = {'app_secret':os.environ['DEEZER_CLIENT_SECRET'],
                 'app_id': os.environ['DEEZER_APP_ID'],
@@ -17,24 +18,33 @@ def main (songs,playlists,albums):
                 }
     
     if songs == 'y':
-        #already saved tracks ID
-        print('Get tracks already saved in Deezer')
-        deezer_saved_tracksIDs = Deezer_util.get_saved_tracksID(param_session)
         # get spotify tracks 
         print('Get Spotify Library')
         spotify_tracks_library = Spotify_util.get_tracks_df()
-        print('Find the ID in deezer of the Spotify tracks')
-        spotify_tracks_library,Spotify_Tracks_id,unmatched,song_found_without_artist = Deezer_util.search_deezertracksID_from_spotify_library(spotify_tracks_library)
-        # add track to the library
-        print('Update the Deezer Library')
-        count_tracksadded,count_tracks_alreadysaved,deezer_saved_tracksIDs = Deezer_util.add_track_deezer(deezer_saved_tracksIDs,Spotify_Tracks_id)
 
+        print('Find the ID in deezer of the Spotify tracks')
+        spotify_tracks_library,Spotify_Tracks_id,unmatched,song_found_without_artist = Deezer_util.search_deezertracksID_from_spotify_library(param_session,spotify_tracks_library)
+
+        #print('Get tracks already saved in Deezer')
+        #deezer_saved_tracksIDs = Deezer_util.get_saved_tracksID('tracks',param_session)
+
+        print('Update the Deezer Library')
+        count_tracksadded,count_tracks_alreadysaved = Deezer_util.add_track_deezer(param_session,Spotify_Tracks_id,True)
+    
+    # load connection parameters
+    if playlists == 'y':
+
+        print('Get Spotify playlists')
+        df_spotify_playlists = Spotify_util.get_choose_playlists(True)
+
+        print('Add playlists to Deezer')
+        Deezer_util.add_playlists(df_spotify_playlists,param_session,publicplaylist=False,collaborative=False,print_loading=True)
 
     # Artistes
 if __name__ == "__main__":
     songs = input('Wanna get all favorites songs ? (y/n) :')
-    #playlists = input('Wanna get favorites playlists ? (y/n) :')
+    playlists = input('Wanna get favorites playlists ? (y/n) :')
     #albums = input('Wanna get favorites albums ? (y/n) :')
-    main(songs,'n','n')
+    main(songs,playlists,'n')
 else: #useless
     print("main is being imported") 

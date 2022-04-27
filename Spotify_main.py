@@ -16,24 +16,7 @@ def main (songs,playlists,albums):
         Spotify_util.wanna_saved('Favorite_Songs',saved_tracks)
     #playlists part
     if playlists == 'y':
-        playlist_name, playlist_id, userconnection = Spotify_util.get_playlists_names()
-        
-        print('\n')
-        print(playlist_name)
-        print('\n')
-        keep_playlists = input('Keep all playlists ? (y/n) :')
-
-        if keep_playlists == 'y':
-            print('keep every playlists')
-        else : 
-            for playlist,id in zip(playlist_name,playlist_id):
-                tokeep = input(f'Keep {playlist} ? (y/n) :')
-                if tokeep !='y':
-                    playlist_name.remove(playlist)
-                    playlist_id.remove(id)
-        #launch function
-
-        df_playlists = Spotify_util.get_playlists_tracks(playlist_name,playlist_id,userconnection)
+        df_playlists = Spotify_util.get_choose_playlists()
         Spotify_util.wanna_saved('Playlists',df_playlists)
     #Albums
     if albums == 'y':
