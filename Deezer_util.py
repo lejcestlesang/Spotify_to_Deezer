@@ -1,48 +1,84 @@
+from logging import raiseExceptions
 import requests
 
 import pandas as pd
+
+import oauth_deezer
+
+import os
+
+def wanna_saved(
+    tipo: str,
+    df: pd.DataFrame
+):
+    """Ask the user to save the 'df' 
+
+    Args:
+        tipo (str): name used to saved the df
+        df (pd.DataFrame): 
+    """
+    saved= input(f'Want to save {tipo} to a file ? (y/n) :')
+    if saved == 'y':
+        df.to_excel(f'Data/{tipo}_Deezer.xlsx')
+        print(f'{tipo} from saved to an excel file')
 
 def request_json(
     operation: str,
     URL: str,
     param_session: dict,
-    print_json: bool =False
+    print_json: bool = False
 ):
-    """ request the 'operation' to be done at the 'URL' using 'param_session', 'print_json' can be use to print the results 
-        return :    - 'json_obj' a dictionary
-                    - True if the 'request' does not need to respond a json object
-                    - False if their if there is an Error
+    """ request 'operation' to the Deezer API 
+
+    Args:
+        operation (str): type of operation
+        URL (str): URL of Deezer API
+        param_session (dict): parameters for the request(connection parameters + details of the request)
+        print_json (bool, optional): print the json response of the request. Defaults to False.
+
+    Raises:
+        Exception: Request not Valid 
+
+    Returns:
+        True: request is valid and not need to respond
+        False: resquest invalid for some reason
+        dict: response of the request 
     """
     session = requests.session()
     response = session.request(operation,URL,params=param_session)
-    
-    try:
-        response.raise_for_status()
-    except requests.exceptions.HTTPError as e:
-        # Whoops it wasn't a 200
-        return "Error: " + str(e)
 
-    if print_json:
-        print(response.json())
-        print(response)
+    if response.status_code == 200 :
+        if print_json==True:
+            print(response.json())
 
-    # Must have been a 200 status code
-    if response.json() == True:
-        return True
-    elif response.json().get('error') : 
-        if response.json()['error']['code'] == 801: # track already saved check if needed to return false as well
-            return response.json()
+        if response.json() == True:
+            return True
+        elif response.json().get('error') : 
+            if response.json()['error']['code'] == 801: # track already saved check if needed to return false as well
+                return response.json()
+            else:
+                print('ERROR \n')
+                print(response.json()['error']['message'])
+                print('\n')
+
+                return False
         else:
-            print(response.json()['error']['message'])
-            return False
-    else:
-        json_obj = response.json()
-        return json_obj
+            json_obj = response.json()
+            return json_obj
+    else :
+        raise Exception('Status code not equal to 200')
 
 def get_saved_tracksID(
     param_session: dict
-):
-    """ return a list of 'tracksID_already_saved'"""
+) -> list:
+    """ return a list of 'tracksID_already_saved'
+
+    Args:
+        param_session (dict): parameters for the request(connection parameters + details of the request)
+
+    Returns:
+        list: list of int of trackID already saved in the Deezer library of the user
+    """
     URL = 'https://api.deezer.com/user/me/tracks'
     session = requests.session()
     response = session.request("GET",URL,params=param_session)
@@ -63,11 +99,18 @@ def get_saved_tracksID(
 
 def get_playlists_info(
     param_session: dict,
-    print_loading: Boolean=False
-):
-    """ Use 'param_session' to 
-        return : a dictionary 'deezer_playlist' with playlists name as keys and playlists ID as value 
+    print_loading: bool = False
+) -> dict:
+    """ Get playlists infos of the users
+
+    Args:
+        param_session (dict): parameters for the request(connection parameters + details of the request)
+        print_loading (bool, optional): print the names of the playlists of the Deezer User. Defaults to False.
+
+    Returns:
+        dict: playlist names as keys and playlist ID as value
     """
+
     URL = 'https://api.deezer.com/user/me/playlists'
     response = request_json('GET',URL,param_session)
 
@@ -85,9 +128,17 @@ def deezer_search(
     artist: str = None,
     track: str = None,
     album: str = None
-):
-    """ return the trackID (str) after searching for a 'track' from 'artist' on the 'album' 
-                or -1 if it was not found
+) -> int:
+    """ Search the track ID in deezer of a song with the following parameters 
+
+    Args:
+        param_session (dict): parameters for the request(connection parameters + details of the request)
+        artist (str, optional):  Defaults to None.
+        track (str, optional):  Defaults to None.
+        album (str, optional):  Defaults to None.
+
+    Returns:
+        int: TrackID in deezer API or -1 if not found
     """
     #initiate parameters
     URL = 'https://api.deezer.com/search?q='
@@ -108,8 +159,15 @@ def deezer_search(
         
 def reformat_track_name (
     trackname: str
-):
-    """ Return an newname (str) without informations of Featurings from a 'trackname'"""
+) -> str:
+    """reformat the trackname
+
+    Args:
+        trackname (str): original trackname
+
+    Returns:
+        str: new trackname without the featuring informations
+    """
     if 'feat.' in trackname or '(&'in trackname :
         index = trackname.find('(')
         newname = trackname[:index]
@@ -119,13 +177,20 @@ def search_deezertracksID_from_spotify_library(
     param_session: dict,
     df_library_spotify: pd.DataFrame(),
     index_to_ban: list = [],
-    print_loading: Boolean = False
+    print_loading: bool = False
 ):
-    """ From 'df_library_spotify' with columns 'Artists', 'Tracks', 'Albums', 'TrackID'
-        Return :    -'df_library_spotify' with the column 'Deezer_trackid' (int)
-                    -'Tracks_id': list of int corresponding to the Track id of each song 
-                    -'unmatched': list of songs unmatched
-                    -'song_found_without_artist' : int
+    """ Find the corresponding trackID for each song in 'df_library_spotify'
+
+    Args:
+        param_session (dict): parameters for the request(connection parameters + details of the request)
+        df_library_spotify (pd.DataFrame): with columns 'Tracks','Artists','Albums','trackid'(for spotify)
+        index_to_ban (list, optional): index of the 'df_library_spotify' to ban in case of an error. Defaults to [].
+        print_loading (bool, optional): Print if a song found a corresponding ID in deeer API. Defaults to False.
+
+    Returns:
+        pd.DataFrame(): df_library_spotify with a new column 'Deezer_trackid'
+        list: TrackID (int) found in Deezer API
+        int: number of trackID found without using the Artist name 
     """
     # get deezer trackID from spotify library:
     Tracks_id = [] 
@@ -157,20 +222,27 @@ def search_deezertracksID_from_spotify_library(
                         df_library_spotify.loc[index,'Deezer_trackid']=resultID
                         found = True
                         song_found_without_artist += +1           
-                    else:
-                        unmatched.append([row.Artists,row.Tracks,row.Albums])
         if print_loading:
             print(f'Songs : {row.Artists} : {row.Tracks} in {row.Albums} - found( {found} )')
-    return df_library_spotify,Tracks_id,unmatched,song_found_without_artist
+    return df_library_spotify,Tracks_id,song_found_without_artist
 
 def add_track_deezer(
     param_session: dict,
-    newtracks_id: list,# list of int
-    print_loading: Boolean = False,
-    print_json: Boolean = True
+    newtracks_id: list,
+    print_loading: bool = False,
+    print_json: bool = False
 ):
-    """ Add 'newtracks_id's to the user library 
-        Return the number of 'count_new_tracks' and the number 'alreadyIN_track' 
+    """ Add newtracks to User library
+
+    Args:
+        param_session (dict): parameters for the request(connection parameters + details of the request)
+        newtracks_id (list): list of trackID(int) to add to the library
+        print_loading (bool, optional): print number of track added and the number already saved. Defaults to False.
+        print_json (bool, optional): print result of each request. Defaults to False.
+
+    Returns:
+        int: counter of new tracks
+        int: counter of tracks already saved 
     """
     URL = 'https://api.deezer.com/user/me/tracks'
     count_new_tracks = 0
@@ -203,12 +275,24 @@ def add_track_deezer(
 def add_playlists(
     df_spotify_playlists: pd.DataFrame(),
     param_session: dict,
-    publicplaylist: Boolean = True,
-    collaborative: Boolean = False,
-    print_loading: Boolean = False,
-    print_json: Boolean = False
+    publicplaylist: bool = True,
+    collaborative: bool = False,
+    print_loading: bool = False,
+    print_json: bool = False
 ):
-    """From 'df_spotify_playlists' add playlists and their tracks to the user library"""
+    """ From 'df_spotify_playlists' add playlists and their tracks to the user library
+
+    Args:
+        df_spotify_playlists (pd.DataFrame): _description_
+        param_session (dict): parameters for the request(connection parameters + details of the request)
+        publicplaylist (bool, optional): parameter to set a new playlist as public or private. Defaults to True.
+        collaborative (bool, optional): parameter to set a new playlist as collaborative or not. Defaults to False.
+        print_loading (bool, optional): print some actions of the function. Defaults to False.
+        print_json (bool, optional): print result of each request. Defaults to False.
+
+    Return:
+        pd.Dataframe: library updated on Deezer
+    """
 
     URL = 'https://api.deezer.com/user/me/playlists'
     deezer_old_playlists = get_playlists_info(param_session,True)
@@ -237,7 +321,7 @@ def add_playlists(
         if print_loading:
             print(f'Search Deezer trackID for all songs inside the SPotify playlist {playlistname}\n')
         # search for all the deezer track ID of the tracks inside spotify playlist
-        df_library_spotify,Tracks_id,unmatched,song_found_without_artist = search_deezertracksID_from_spotify_library(param_session,df_playlist,print_loading=print_loading)
+        df_library_spotify,Tracks_id,song_found_without_artist = search_deezertracksID_from_spotify_library(param_session,df_playlist,print_loading=print_loading)
 
         #add tracks to the playlist
         URL = f'https://api.deezer.com/playlist/{id_playlist}/tracks'
@@ -254,3 +338,34 @@ def add_playlists(
 
         if print_loading:
             print(f'In {playlistname} : {new_trackcount} new tracks added, {alreadyIN_trackcount} already saved \n')
+    return df_library_spotify
+
+# TO DO  add_albums & check error in playlists 
+
+def add_albums(
+    param_session: dict,
+    spotify_albums: pd.DataFrame
+):
+    """ 'spotify_albums' Artists(str)/Albums(str)
+    """
+    # for every albums find the deezerid
+    for index,row in spotify_albums.iterrows():
+        param_session['id'] = deezer_search(param_session,artist=row.Artists,album=row.Albums)
+        #upload the album
+        URL = 'https://api.deezer.com/user/me/album'
+        #resp
+
+def Authentication(
+    param_session: dict
+):
+    """ check if authentication works with current token, if not replace it with the new one
+
+    Args:
+        param_session (dict): connection parameters
+    """
+
+    if request_json('GET','https://api.deezer.com/user/me',param_session,True) == False:
+        app_id = param_session['app_id']
+        app_secret = param_session['app_secret']
+        os.system(f"python oauth_deezer.py --app-id {app_id} --app-secret {app_secret}")
+        

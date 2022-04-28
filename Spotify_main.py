@@ -16,12 +16,13 @@ def main (songs,playlists,albums):
         Spotify_util.wanna_saved('Favorite_Songs',saved_tracks)
     #playlists part
     if playlists == 'y':
-        df_playlists = Spotify_util.get_choose_playlists()
+        df_playlists = Spotify_util.get_choose_playlists(True)
+        print(df_playlists)
         Spotify_util.wanna_saved('Playlists',df_playlists)
     #Albums
     if albums == 'y':
-        saved_tracks = Spotify_util.get_tracks_df()
-        Spotify_util.wanna_saved('Favorite_Albums',saved_tracks)
+        saved_albums = Spotify_util.get_albums_df()
+        Spotify_util.wanna_saved('Favorite_Albums',saved_albums)
     
 
     # Artistes

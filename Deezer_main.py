@@ -17,13 +17,15 @@ def main (songs,playlists,albums):
                 'access_token':os.environ['DEEZER_TOKEN']
                 }
     
+    Deezer_util.Authentication(param_session)
+    
     if songs == 'y':
         # get spotify tracks 
         print('Get Spotify Library')
         spotify_tracks_library = Spotify_util.get_tracks_df()
 
         print('Find the ID in deezer of the Spotify tracks')
-        spotify_tracks_library,Spotify_Tracks_id,unmatched,song_found_without_artist = Deezer_util.search_deezertracksID_from_spotify_library(param_session,spotify_tracks_library)
+        spotify_tracks_library,Spotify_Tracks_id,song_found_without_artist = Deezer_util.search_deezertracksID_from_spotify_library(param_session,spotify_tracks_library)
 
         #print('Get tracks already saved in Deezer')
         #deezer_saved_tracksIDs = Deezer_util.get_saved_tracksID('tracks',param_session)
@@ -38,8 +40,11 @@ def main (songs,playlists,albums):
         df_spotify_playlists = Spotify_util.get_choose_playlists(True)
 
         print('Add playlists to Deezer')
-        Deezer_util.add_playlists(df_spotify_playlists,param_session,publicplaylist=False,collaborative=False,print_loading=True)
+        df_playlist = Deezer_util.add_playlists(df_spotify_playlists,param_session,publicplaylist=False,collaborative=False,print_loading=True)
+        Deezer_util.wanna_saved('deezer_playlists',df_playlist)
 
+    if albums == 'y':
+        print('dd')
     # Artistes
 if __name__ == "__main__":
     songs = input('Wanna get all favorites songs ? (y/n) :')
