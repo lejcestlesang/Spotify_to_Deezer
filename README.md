@@ -13,7 +13,7 @@ Follow through the instructions and you might have it done faster than you might
 
 ## Usage
 
-Create a new folder (replace yournewfolder by the name of your choice in the following command lines).  
+1. Create a new folder (replace yournewfolder by the name of your choice in the following command lines).  
 Unix/macOS terminal:  
 ```bash
 mkdir yournewfolder
@@ -23,7 +23,7 @@ Windows PowerShell:
 New-Item -Path .\yournewfolder -ItemType Directory
 ```
 
-Download the respository in this folder. If git is installed use the following commands if not use this [link](https://github.com/lejcestlesang/Spotify_to_Deezer)  
+2. Now download the respository in this folder. If git is installed use the following commands if not use this [link](https://github.com/lejcestlesang/Spotify_to_Deezer)  
 
 Unix/macOS terminal:  
 ```bash
@@ -36,7 +36,7 @@ cd yournewfolder
 git clone https://github.com/lejcestlesang/Spotify_to_Deezer.git $HOME
 ```
 
-Install the dependencies. 
+3. Install the dependencies. 
 
 Unix/macOS terminal:  
 ```bash
@@ -47,11 +47,23 @@ Windows PowerShell:
 py -m pip install -r requirements.txt
 ```
 
-WE ARE ALMOST THERE; the hardest part is already done.
+4. WE ARE ALMOST THERE; the hardest part is already done. now launch the following command  
+
+Unix/macOS terminal:  
+```bash
+python Deezer_main.py
+```
+
+Follow the instructions on the terminal, enter **y** to confirm and press return otherwise.
 
 ## Linting
 
+
 ## Resources
+
+[Deezer API](https://developers.deezer.com/)
+[Spotify API](https://developer.spotify.com/documentation/web-api/)
+[Sptipy](https://spotipy.readthedocs.io/en/2.19.0/)
 
 ## License
 

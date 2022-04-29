@@ -57,10 +57,7 @@ def request_json(
             if response.json()['error']['code'] == 801: # track already saved check if needed to return false as well
                 return response.json()
             else:
-                print('ERROR \n')
                 print(response.json()['error']['message'])
-                print('\n')
-
                 return False
         else:
             json_obj = response.json()
@@ -127,7 +124,9 @@ def deezer_search(
     param_session: dict,
     artist: str = None,
     track: str = None,
-    album: str = None
+    album: str = None,
+    print_json: bool = False,
+    print_loading: bool = False
 ) -> int:
     """ Search the track ID in deezer of a song with the following parameters 
 
@@ -136,6 +135,8 @@ def deezer_search(
         artist (str, optional):  Defaults to None.
         track (str, optional):  Defaults to None.
         album (str, optional):  Defaults to None.
+        print_json (bool, optional): print json response of the search Defaults to False.
+        print_loading (bool, optional): print json loading of the search Defaults to False.
 
     Returns:
         int: TrackID in deezer API or -1 if not found
@@ -149,8 +150,11 @@ def deezer_search(
         URL = URL + (f'track:"{track}" ')
     if album : 
         URL = URL + (f'album:"{album}" ')
+    
+    if print_loading:
+        print(URL)
 
-    json_response = request_json('GET',URL,param_session)
+    json_response = request_json('GET',URL,param_session,print_json)
 
     if json_response['total'] > 0 :
         return json_response['data'][0]['id']
@@ -168,10 +172,12 @@ def reformat_track_name (
     Returns:
         str: new trackname without the featuring informations
     """
-    if 'feat.' in trackname or '(&'in trackname :
+    if 'feat.' in trackname or '(&'in trackname or '(with 'in trackname:
         index = trackname.find('(')
         newname = trackname[:index]
         return newname
+    else:
+        return trackname
 
 def search_deezertracksID_from_spotify_library(
     param_session: dict,
@@ -319,10 +325,10 @@ def add_playlists(
             id_playlist = deezer_old_playlists[playlistname]
 
         if print_loading:
-            print(f'Search Deezer trackID for all songs inside the SPotify playlist {playlistname}\n')
+            print(f'\nSearch Deezer trackID for all songs inside the Spotify playlist {playlistname} \n')
         # search for all the deezer track ID of the tracks inside spotify playlist
         df_library_spotify,Tracks_id,song_found_without_artist = search_deezertracksID_from_spotify_library(param_session,df_playlist,print_loading=print_loading)
-
+        numbertracks = len(df_library_spotify)
         #add tracks to the playlist
         URL = f'https://api.deezer.com/playlist/{id_playlist}/tracks'
         param_session['playlist_id'] = id_playlist
@@ -334,10 +340,8 @@ def add_playlists(
                 new_trackcount += 1
             else : 
                 alreadyIN_trackcount += 1
-                print(df_library_spotify[df_library_spotify.Deezer_trackid == song])
-
         if print_loading:
-            print(f'In {playlistname} : {new_trackcount} new tracks added, {alreadyIN_trackcount} already saved \n')
+            print(f'In {playlistname} (in spotify {numbertracks} songs): {new_trackcount} new tracks added, {alreadyIN_trackcount} already saved \n')
     return df_library_spotify
 
 # TO DO  add_albums & check error in playlists 
@@ -353,7 +357,7 @@ def add_albums(
         param_session['id'] = deezer_search(param_session,artist=row.Artists,album=row.Albums)
         #upload the album
         URL = 'https://api.deezer.com/user/me/album'
-        #resp
+        #TO finish
 
 def Authentication(
     param_session: dict
@@ -364,8 +368,10 @@ def Authentication(
         param_session (dict): connection parameters
     """
 
-    if request_json('GET','https://api.deezer.com/user/me',param_session,True) == False:
+    if request_json('GET','https://api.deezer.com/user/me',param_session) == False:
         app_id = param_session['app_id']
         app_secret = param_session['app_secret']
         os.system(f"python oauth_deezer.py --app-id {app_id} --app-secret {app_secret}")
+
+    # add option to delete the deezer token everytime a new one is generated
         
