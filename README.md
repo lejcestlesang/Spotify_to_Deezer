@@ -61,9 +61,9 @@ Follow the instructions on the terminal, enter **y** to confirm and press return
 
 ## Resources
 
-[Deezer API](https://developers.deezer.com/)
-[Spotify API](https://developer.spotify.com/documentation/web-api/)
-[Sptipy](https://spotipy.readthedocs.io/en/2.19.0/)
+[Deezer API](https://developers.deezer.com/)  
+[Spotify API](https://developer.spotify.com/documentation/web-api/)  
+[Spotipy](https://spotipy.readthedocs.io/en/2.19.0/)  
 
 ## License
 
