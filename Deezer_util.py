@@ -1,4 +1,3 @@
-from logging import raiseExceptions
 import requests
 
 import pandas as pd
@@ -157,7 +156,10 @@ def deezer_search(
     json_response = request_json('GET',URL,param_session,print_json)
 
     if json_response['total'] > 0 :
-        return json_response['data'][0]['id']
+        if track is None:
+            return json_response['data'][0]['album']['id']
+        else :
+            return json_response['data'][0]['id']
     else: 
         return -1
         
@@ -344,20 +346,47 @@ def add_playlists(
             print(f'In {playlistname} (in spotify {numbertracks} songs): {new_trackcount} new tracks added, {alreadyIN_trackcount} already saved \n')
     return df_library_spotify
 
-# TO DO  add_albums & check error in playlists 
 
 def add_albums(
     param_session: dict,
-    spotify_albums: pd.DataFrame
+    spotify_albums: pd.DataFrame,
+    print_loading: bool = False,
+    print_json: bool = False
 ):
-    """ 'spotify_albums' Artists(str)/Albums(str)
+    """ Add user Favorite albums to Deezer
+
+    Args:
+        param_session (dict): parametre of the session user
+        spotify_albums (pd.DataFrame): table of all the album of the user on spotify
+        print_loading (bool, optional): print album and ID in deezer library Defaults to False.
+        print_json (bool, optional): print request responses. Defaults to False.
     """
+    count_newalbums = 0
+    count_unfound = 0
     # for every albums find the deezerid
     for index,row in spotify_albums.iterrows():
-        param_session['id'] = deezer_search(param_session,artist=row.Artists,album=row.Albums)
-        #upload the album
-        URL = 'https://api.deezer.com/user/me/album'
-        #TO finish
+        album = row.Albums
+        # In case we have several artist in on album, we select just the first one, might be optimized later on
+        if '/' in row.Albums:
+            index = album.find('/')
+            album = album[:index]
+
+        album_id = deezer_search(param_session,artist=row.Artists,album=row.Albums,print_json=False,print_loading=False)
+        param_session['album_id'] = album_id
+
+        if album_id == -1:
+            count_unfound += 1
+            if print_loading:
+                print(f'Not Found : {row.Artists} - {row.Albums}')
+        else:
+            #upload the album
+            response = request_json('POST','https://api.deezer.com/user/me/albums',param_session,print_json)
+            if response == True:
+                if print_loading:
+                    print(f'Found : {row.Artists} - {row.Albums} : id {album_id}')
+                count_newalbums += 1
+    
+    print(f'{count_unfound} Albums not found - {count_newalbums} albums added (or already in the library).')
 
 def Authentication(
     param_session: dict

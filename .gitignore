@@ -2,3 +2,4 @@ test.py
 main.ipynb
 .env
 venv/
+__pyache__

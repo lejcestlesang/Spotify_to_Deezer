@@ -1,4 +1,4 @@
-import Deezer_util,utils,Spotify_util # other script
+import Deezer_util,Spotify_util # other script
 
 #useful library
 import pandas as pd
@@ -44,12 +44,16 @@ def main (songs,playlists,albums):
         Deezer_util.wanna_saved('deezer_playlists',df_playlist)
 
     if albums == 'y':
-        print('todo ma bichette')
+        print('Loading Spotify albums\n')
+        df_spotify_albums = Spotify_util.get_albums_df()
+        print('Uploading to Deezer\n')
+        Deezer_util.add_albums(param_session,df_spotify_albums,True)
+
     # Artistes
 if __name__ == "__main__":
     songs = input('Wanna get all favorites songs ? (y/n) :')
     playlists = input('Wanna get favorites playlists ? (y/n) :')
-    #albums = input('Wanna get favorites albums ? (y/n) :')
-    main(songs,playlists,'n')
+    albums = input('Wanna get favorites albums ? (y/n) :')
+    main(songs,playlists,albums)
 else: #useless
     print("main is being imported") 
