@@ -47,10 +47,11 @@ Windows PowerShell:
 py -m pip install -r requirements.txt
 ```
 
-4. WE ARE ALMOST THERE; the hardest part is already done. now launch the following command  
+4. WE ARE ALMOST THERE; the hardest part is already done. Now launch the algorithm
 
 Unix/macOS terminal:  
 ```bash
+cd public
 python Deezer_main.py
 ```
 
