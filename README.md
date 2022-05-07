@@ -57,7 +57,22 @@ python Deezer_main.py
 
 Follow the instructions on the terminal, enter **y** to confirm and press return otherwise.
 
-## Linting
+## ROADMAP
+
+##### Q3 2022
+1. Enable : Import Deezer Library
+2. Enable : Upload Spotify Library
+3. Enable : Download & Upload Qobuz Library
+
+#### Q4 2022 
+1. Create an UI with an application for Windows/Unix or a website
+2. Accept Donations to support further developments
+
+## LIMITATIONS
+
+For now you will need to complete the .env file with your own data following the instructions below :
+- [Deezer API](https://developers.deezer.com/guidelines/getting_started#setup)  
+- [Spotify API](https://developer.spotify.com/dashboard/)  
 
 
 ## Resources
